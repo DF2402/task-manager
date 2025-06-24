@@ -1,8 +1,7 @@
-import Header from '../componets/Header';
-import Footer from '../componets/Footer';
 import { useState, useEffect } from 'react';
-import Task from '../componets/task';
-
+import '../styles/HomePage.css';
+import Task from '../components/task';
+import AddTaskCard from '../components/add-task-card';
 // 定義任務數據類型
 interface TaskData {
   id: number;
@@ -15,66 +14,100 @@ interface TaskData {
   Updated_At: string;
 }
 
-// 主要內容區域的核心邏輯
-const MainContent = () => {
+function HomePage() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<TaskData[] | null>(null);
+  const [isGridView, setIsGridView] = useState(true);
 
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<TaskData[] | null>(null);
-
-    const fetchHomePageData = async () => {
-        try {
-            setLoading(true);
-            // 指定完整的後端API URL
-            const response = await fetch('http://localhost:3001/api/home-page');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('Fetched data:', result); // 調試日誌
-            setData(result);
-        } catch (error) {
-            console.error('Failed to fetch data:', error);
-            setData([]);
-        } finally {
-            setLoading(false);
-        }
+  const fetchHomePageData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:3001/api/home-page');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+      setData([]);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    useEffect(() => {
-        // 數據獲取邏輯
-        fetchHomePageData();  
-    }, []);
+  useEffect(() => {
+    fetchHomePageData();
+  }, []);
 
-    return (
-      <main className="main-content">
-        <section className="hero-section">
-          {/* 主要展示區域 */}
-          {loading && <p style={{ textAlign: 'center', fontSize: '18px' }}>Loading tasks...</p>}
-          {data && data.length > 0 && data.map((task: TaskData) => (
-            <Task key={task.id} task={task} />
-          ))}
-          {data && data.length === 0 && !loading && (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p>No tasks found</p>
-              <p style={{ color: '#666' }}>請確保後端API服務器正在運行</p>
-            </div>
-          )}
-        </section>
-        <section className="features-section">
-          {/* 功能介紹區域 */}
-        </section>
-      </main>
-    );
+  const toggleView = () => {
+    setIsGridView(!isGridView);
   };
 
-function HomePage() {
-    return (
-      <div className="homepage">
-        <Header />
-        <MainContent />
-        <Footer />
-      </div>
-    );
-  }
+  const handleTaskAdded = () => {
+    fetchHomePageData(); // 重新獲取數據
+  };
+
+  const renderTaskStatus = (task: TaskData) => (
+    <div className="task-status">
+      {task.Work_in_progress && <span className="status-badge in-progress">In Progress</span>}
+      {task.To_review && <span className="status-badge to-review">To Review</span>}
+      {task.Done && <span className="status-badge done">Done</span>}
+    </div>
+  );
+
+  return (
+    <div className="home-container">
+      <header className="home-header">
+        <div className="header-content">
+          <h1 className="home-title">Task Management System</h1>
+          <div className="view-toggle">
+            <button 
+              className={`view-toggle-btn ${isGridView ? 'active' : ''}`}
+              onClick={toggleView}
+              title="grid view"
+            >
+              📱
+            </button>
+            <button 
+              className={`view-toggle-btn ${!isGridView ? 'active' : ''}`}
+              onClick={toggleView}
+              title="list view"
+            >
+              📝
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section className="task-section">
+        {loading && (
+          <div className="loading-message">
+            <p>正在載入任務...</p>
+          </div>
+        )}
+        
+        {data && data.length > 0 && (
+          <div className={isGridView ? "tasks-grid" : "tasks-list"}>
+            {data.map((task: TaskData) => (
+              <Task key={task.id} task={task} />
+            ))}
+          </div>
+        )}
+
+        {data && data.length === 0 && !loading && (
+          <div className="no-tasks-message">
+            <p>No tasks</p>
+            <p>Please ensure the backend API server is running</p>
+          </div>
+        )}
+      </section>
+
+      <AddTaskCard onTaskAdded={handleTaskAdded} />
+    </div>
+  );
+}
+
+export default HomePage;

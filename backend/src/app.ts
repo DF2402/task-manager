@@ -3,6 +3,7 @@ import cors from 'cors';
 import { DatabaseConnection, getDatabaseConfig } from './database/connection';
 import workerRoutes from './routes/workerRoutes';
 import taskRoutes from './routes/taskRoutes';
+import attendanceRoutes from './routes/attendanceRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 // API 路由配置
 app.use('/api/workers', workerRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // 健康檢查端點
 app.get('/api/health', (req, res) => {
@@ -50,16 +52,16 @@ app.get('/api/home-page', async (req, res, next) => {
   }
 });
 
+// 錯誤處理中間件
+app.use(errorHandler);
+
 // 404 處理
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`
   });
 });
-
-// 錯誤處理中間件
-app.use(errorHandler);
 
 // 服務器啟動邏輯
 async function startServer() {
@@ -86,6 +88,12 @@ async function startServer() {
       console.log('  - GET    /api/tasks/worker/:workerId');
       console.log('  - PUT    /api/tasks/:id');
       console.log('  - DELETE /api/tasks/:id');
+      console.log('  - GET    /api/attendance');
+      console.log('  - POST   /api/attendance');
+      console.log('  - GET    /api/attendance/:id');
+      console.log('  - GET    /api/attendance/worker/:workerId');
+      console.log('  - PUT    /api/attendance/:id');
+      console.log('  - DELETE /api/attendance/:id');
     });
   } catch (error) {
     console.error('❌ Server startup failed:', error);

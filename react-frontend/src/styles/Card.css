@@ -1,0 +1,67 @@
+/* 卡片容器 */
+.card {
+    background-color: #fff; /* 背景色 */
+    border-radius: 8px; /* 圆角 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+    padding: 16px; /* 内边距 */
+    margin: 16px; /* 外边距 */
+    transition: box-shadow 0.3s ease; /* 悬停阴影动画 */
+  }
+  
+  /* 悬停效果 */
+  .card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* 标题样式 */
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  
+  /* 内容文本 */
+  .card-content {
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  /* 图片（可选） */
+  .card-img {
+    width: 100%;
+    border-radius: 8px 8px 0 0; /* 只在顶部圆角 */
+    margin-bottom: 12px;
+  }
+
+  .add-btn {
+    background-color: #227e0a92;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 10px;
+  }
+
+  .card-select {
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 10px;
+  }
+
+  .card-input {
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 10px;
+  }
