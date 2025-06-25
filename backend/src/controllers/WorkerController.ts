@@ -65,7 +65,10 @@ export class WorkerController {
         return;
       }
       
-      const worker = await this.workerService.createWorker({ Name: Name.trim() });
+      const worker = await this.workerService.createWorker({
+        Name: Name.trim()
+      });
+      
       res.status(201).json({
         success: true,
         data: worker,
@@ -90,7 +93,9 @@ export class WorkerController {
         return;
       }
       
-      const worker = await this.workerService.updateWorker(parseInt(id), { Name: Name.trim() });
+      const worker = await this.workerService.updateWorker(parseInt(id), {
+        Name: Name.trim()
+      });
       
       if (!worker) {
         res.status(404).json({

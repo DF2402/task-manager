@@ -9,4 +9,4 @@ export interface CreateWorkerRequest {
 
 export interface UpdateWorkerRequest {
     Name?: string;
-}
+} 

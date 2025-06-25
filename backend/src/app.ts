@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import { DatabaseConnection, getDatabaseConfig } from './database/connection';
-import workerRoutes from './routes/workerRoutes';
+import userRoutes from './routes/userRoutes';
 import taskRoutes from './routes/taskRoutes';
-import attendanceRoutes from './routes/attendanceRoutes';
+import scheduleRoutes from './routes/scheduleRoutes';
+import fileRoutes from './routes/fileRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -27,9 +28,10 @@ app.use((req, res, next) => {
 });
 
 // API 路由配置
-app.use('/api/workers', workerRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
-app.use('/api/attendance', attendanceRoutes);
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/files', fileRoutes);
 
 // 健康檢查端點
 app.get('/api/health', (req, res) => {
@@ -77,23 +79,30 @@ async function startServer() {
       console.log('📄 Available routes:');
       console.log('  - GET    /api/health');
       console.log('  - GET    /api/home-page');
-      console.log('  - GET    /api/workers');
-      console.log('  - POST   /api/workers');
-      console.log('  - GET    /api/workers/:id');
-      console.log('  - PUT    /api/workers/:id');
-      console.log('  - DELETE /api/workers/:id');
+      console.log('  - GET    /api/users');
+      console.log('  - POST   /api/users');
+      console.log('  - GET    /api/users/:id');
+      console.log('  - PUT    /api/users/:id');
+      console.log('  - DELETE /api/users/:id');
+      console.log('  - PUT    /api/users/:id/activate');
+      console.log('  - PUT    /api/users/:id/deactivate');
       console.log('  - GET    /api/tasks');
       console.log('  - POST   /api/tasks');
       console.log('  - GET    /api/tasks/:id');
-      console.log('  - GET    /api/tasks/worker/:workerId');
+      console.log('  - GET    /api/tasks/user/:userId');
       console.log('  - PUT    /api/tasks/:id');
       console.log('  - DELETE /api/tasks/:id');
-      console.log('  - GET    /api/attendance');
-      console.log('  - POST   /api/attendance');
-      console.log('  - GET    /api/attendance/:id');
-      console.log('  - GET    /api/attendance/worker/:workerId');
-      console.log('  - PUT    /api/attendance/:id');
-      console.log('  - DELETE /api/attendance/:id');
+      console.log('  - GET    /api/schedules');
+      console.log('  - POST   /api/schedules');
+      console.log('  - GET    /api/schedules/:id');
+      console.log('  - GET    /api/schedules/user/:userId');
+      console.log('  - PUT    /api/schedules/:id');
+      console.log('  - DELETE /api/schedules/:id');
+      console.log('  - GET    /api/files');
+      console.log('  - POST   /api/files');
+      console.log('  - GET    /api/files/:id');
+      console.log('  - PUT    /api/files/:id');
+      console.log('  - DELETE /api/files/:id');
     });
   } catch (error) {
     console.error('❌ Server startup failed:', error);

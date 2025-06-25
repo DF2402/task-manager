@@ -30,11 +30,11 @@ export class TaskService {
     });
   }
 
-  async getTasksByWorkerId(workerId: number): Promise<Task[]> {
+  async getTasksByUserId(userId: number): Promise<Task[]> {
     return new Promise((resolve, reject) => {
       this.getDb().all(
-        'SELECT * FROM Task WHERE Worker_Id = ? ORDER BY Created_At DESC',
-        [workerId],
+        'SELECT * FROM Task WHERE User_Id = ? ORDER BY Created_At DESC',
+        [userId],
         (err: any, rows: any) => {
           if (err) {
             reject(err);
@@ -50,8 +50,8 @@ export class TaskService {
     return new Promise((resolve, reject) => {
       const now = new Date().toISOString();
       this.getDb().run(
-        'INSERT INTO Task (Content, Worker_Id, Work_in_progress, To_review, Done, Created_At, Updated_At) VALUES (?, ?, 0, 0, 0, ?, ?)',
-        [data.Content, data.Worker_Id, now, now],
+        'INSERT INTO Task (Content, User_Id, Work_in_progress, To_review, Done, Created_At, Updated_At) VALUES (?, ?, 0, 0, 0, ?, ?)',
+        [data.Content, data.User_Id || null, now, now],
         function(this: any, err: any) {
           if (err) {
             reject(err);
@@ -59,7 +59,7 @@ export class TaskService {
             resolve({
               id: this.lastID,
               Content: data.Content,
-              Worker_Id: data.Worker_Id,
+              User_Id: data.User_Id || null,
               Work_in_progress: false,
               To_review: false,
               Done: false,
@@ -84,9 +84,9 @@ export class TaskService {
         updates.push('Content = ?');
         values.push(data.Content);
       }
-      if (data.Worker_Id !== undefined) {
-        updates.push('Worker_Id = ?');
-        values.push(data.Worker_Id);
+      if (data.User_Id !== undefined) {
+        updates.push('User_Id = ?');
+        values.push(data.User_Id);
       }
       if (data.Work_in_progress !== undefined) {
         updates.push('Work_in_progress = ?');
@@ -118,7 +118,7 @@ export class TaskService {
             resolve({
               id: id,
               Content: data.Content || '',
-              Worker_Id: data.Worker_Id || 0,
+              User_Id: data.User_Id || null,
               Work_in_progress: data.Work_in_progress || false,
               To_review: data.To_review || false,
               Done: data.Done || false,

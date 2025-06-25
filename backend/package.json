@@ -11,6 +11,7 @@
     "init-db": "ts-node src/scripts/initDatabase.ts",
     "seed": "ts-node src/scripts/seed.ts",
     "setup": "npm run init-db && npm run seed",
+    "migration": "ts-node src/scripts/manualMigration.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

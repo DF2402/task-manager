@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { TaskService } from '../services/TaskService';
+import { ScheduleService } from '../services/ScheduleService';
 
-export class TaskController {
-  private taskService: TaskService;
+export class ScheduleController {
+  private scheduleService: ScheduleService;
 
   constructor() {
-    this.taskService = new TaskService();
+    this.scheduleService = new ScheduleService();
     
     // 綁定 this 上下文
     this.getAll = this.getAll.bind(this);
@@ -16,159 +16,132 @@ export class TaskController {
     this.delete = this.delete.bind(this);
   }
 
-  // 獲取所有任務
+  // 獲取所有排程
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const tasks = await this.taskService.getAllTasks();
+      const schedules = await this.scheduleService.getAllSchedules();
       res.json({
         success: true,
-        data: tasks,
-        count: tasks.length
+        data: schedules,
+        count: schedules.length
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 根據ID獲取任務
+  // 根據ID獲取排程
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const task = await this.taskService.getTaskById(parseInt(id));
+      const schedule = await this.scheduleService.getScheduleById(parseInt(id));
       
-      if (!task) {
+      if (!schedule) {
         res.status(404).json({
           success: false,
-          message: 'Task not found'
+          message: 'Schedule not found'
         });
         return;
       }
       
       res.json({
         success: true,
-        data: task
+        data: schedule
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 根據用戶ID獲取任務
+  // 根據用戶ID獲取排程
   async getByUserId(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.params;
-      const tasks = await this.taskService.getTasksByUserId(parseInt(userId));
+      const schedules = await this.scheduleService.getSchedulesByUserId(parseInt(userId));
       
       res.json({
         success: true,
-        data: tasks,
-        count: tasks.length
+        data: schedules,
+        count: schedules.length
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 創建新任務
+  // 創建新排程
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { Content, User_Id } = req.body;
+      const { User_Id, Date } = req.body;
       
-      if (!Content || Content.trim() === '') {
-        res.status(400).json({
-          success: false,
-          message: 'Content is required'
-        });
-        return;
-      }
-      
-      const task = await this.taskService.createTask({
-        Content: Content.trim(),
-        User_Id: User_Id ? parseInt(User_Id) : undefined
+      const schedule = await this.scheduleService.createSchedule({
+        User_Id: User_Id ? parseInt(User_Id) : undefined,
+        Date: Date || undefined
       });
       
       res.status(201).json({
         success: true,
-        data: task,
-        message: 'Task created successfully'
+        data: schedule,
+        message: 'Schedule created successfully'
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 更新任務
+  // 更新排程
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const { Content, User_Id, Work_in_progress, To_review, Done } = req.body;
+      const { User_Id, Date } = req.body;
       
       const updateData: any = {};
-      
-      if (Content !== undefined) {
-        if (Content.trim() === '') {
-          res.status(400).json({
-            success: false,
-            message: 'Content cannot be empty'
-          });
-          return;
-        }
-        updateData.Content = Content.trim();
-      }
       
       if (User_Id !== undefined) {
         updateData.User_Id = User_Id ? parseInt(User_Id) : null;
       }
       
-      if (Work_in_progress !== undefined) {
-        updateData.Work_in_progress = Boolean(Work_in_progress);
+      if (Date !== undefined) {
+        updateData.Date = Date || null;
       }
       
-      if (To_review !== undefined) {
-        updateData.To_review = Boolean(To_review);
-      }
+      const schedule = await this.scheduleService.updateSchedule(parseInt(id), updateData);
       
-      if (Done !== undefined) {
-        updateData.Done = Boolean(Done);
-      }
-      
-      const task = await this.taskService.updateTask(parseInt(id), updateData);
-      
-      if (!task) {
+      if (!schedule) {
         res.status(404).json({
           success: false,
-          message: 'Task not found'
+          message: 'Schedule not found'
         });
         return;
       }
       
       res.json({
         success: true,
-        data: task,
-        message: 'Task updated successfully'
+        data: schedule,
+        message: 'Schedule updated successfully'
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 刪除任務
+  // 刪除排程
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const success = await this.taskService.deleteTask(parseInt(id));
+      const success = await this.scheduleService.deleteSchedule(parseInt(id));
       
       if (!success) {
         res.status(404).json({
           success: false,
-          message: 'Task not found'
+          message: 'Schedule not found'
         });
         return;
       }
       
       res.json({
         success: true,
-        message: 'Task deleted successfully'
+        message: 'Schedule deleted successfully'
       });
     } catch (error) {
       next(error);

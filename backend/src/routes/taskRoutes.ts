@@ -7,7 +7,7 @@ const taskController = new TaskController();
 // Task CRUD 路由
 router.get('/', taskController.getAll);
 router.get('/:id', taskController.getById);
-router.get('/worker/:workerId', taskController.getByWorkerId);
+router.get('/user/:userId', taskController.getByUserId);
 router.post('/', taskController.create);
 router.put('/:id', taskController.update);
 router.delete('/:id', taskController.delete);

@@ -60,3 +60,10 @@ Thumbs.db
 *.tsbuildinfo
 ./backend/dev.db
 ./backend/prod.db
+
+backend/dist/*
+react-frontend/dist/*
+**/dist/*
+
+
+
