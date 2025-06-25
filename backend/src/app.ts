@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { DatabaseConnection, getDatabaseConfig } from './database/connection';
-import userRoutes from './routes/userRoutes';
 import taskRoutes from './routes/taskRoutes';
+import attendanceRoutes from './routes/attendanceRoutes';
+import userRoutes from './routes/userRoutes';
 import scheduleRoutes from './routes/scheduleRoutes';
 import fileRoutes from './routes/fileRoutes';
 import { errorHandler } from './middleware/errorHandler';
@@ -21,6 +23,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// 靜態文件服務 - 為上傳的文件提供訪問
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // 請求日誌中間件
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -31,6 +36,7 @@ app.use((req, res, next) => {
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/api/files', fileRoutes);
 
 // 健康檢查端點
@@ -92,17 +98,26 @@ async function startServer() {
       console.log('  - GET    /api/tasks/user/:userId');
       console.log('  - PUT    /api/tasks/:id');
       console.log('  - DELETE /api/tasks/:id');
+      console.log('  - PUT    /api/tasks/:id/in-progress');
+      console.log('  - PUT    /api/tasks/:id/review');
+      console.log('  - PUT    /api/tasks/:id/done');
       console.log('  - GET    /api/schedules');
       console.log('  - POST   /api/schedules');
       console.log('  - GET    /api/schedules/:id');
       console.log('  - GET    /api/schedules/user/:userId');
+      console.log('  - GET    /api/schedules/date/:date');
       console.log('  - PUT    /api/schedules/:id');
       console.log('  - DELETE /api/schedules/:id');
+      console.log('  - GET    /api/attendance');
+      console.log('  - GET    /api/attendance/worker/:workerId');
       console.log('  - GET    /api/files');
       console.log('  - POST   /api/files');
       console.log('  - GET    /api/files/:id');
       console.log('  - PUT    /api/files/:id');
       console.log('  - DELETE /api/files/:id');
+      console.log('  - POST   /api/files/upload');
+      console.log('  - GET    /api/files/task/:taskId');
+      console.log('  - GET    /api/files/download/:id');
     });
   } catch (error) {
     console.error('❌ Server startup failed:', error);

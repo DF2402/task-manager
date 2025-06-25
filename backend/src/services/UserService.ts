@@ -1,147 +1,109 @@
 import { DatabaseConnection } from '../database/connection';
-import { User, CreateUserRequest, UpdateUserRequest, UserResponse } from '../models/user';
+import { User, CreateUserRequest, UpdateUserRequest } from '../models/user';
 
 export class UserService {
-  private getDb() {
-    return DatabaseConnection.getInstance();
-  }
-
-  async getAllUsers(): Promise<UserResponse[]> {
+    async getAllUsers(): Promise<User[]> {
     return new Promise((resolve, reject) => {
-      this.getDb().all('SELECT id, Name, Email, Created_At, On_boarded_at, Active FROM User ORDER BY id DESC', (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows as UserResponse[]);
+            const db = DatabaseConnection.getInstance();
+            db.all(
+                'SELECT * FROM User ORDER BY Name',
+                (err: any, rows: User[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
-      });
+            );
     });
   }
 
-  async getUserById(id: number): Promise<UserResponse | null> {
+    async getUserById(id: number): Promise<User | null> {
     return new Promise((resolve, reject) => {
-      this.getDb().get('SELECT id, Name, Email, Created_At, On_boarded_at, Active FROM User WHERE id = ?', [id], (err: any, row: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row as UserResponse || null);
+            const db = DatabaseConnection.getInstance();
+            db.get(
+                'SELECT * FROM User WHERE id = ?',
+                [id],
+                (err: any, row: User) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
         }
-      });
+            );
     });
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
     return new Promise((resolve, reject) => {
-      this.getDb().get('SELECT * FROM User WHERE Email = ?', [email], (err: any, row: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row as User || null);
-        }
-      });
-    });
-  }
-
-  async createUser(data: CreateUserRequest): Promise<UserResponse> {
-    return new Promise((resolve, reject) => {
-      // 簡單的密碼處理（實際應用中應該使用 bcrypt 加密）
-      const now = new Date().toISOString();
-      
-      this.getDb().run(
-        'INSERT INTO User (Name, Email, Password, Created_At, Active) VALUES (?, ?, ?, ?, ?)',
-        [data.Name, data.Email || null, data.Password, now, 1],
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              id: this.lastID,
-              Name: data.Name,
-              Email: data.Email || null,
-              Created_At: now,
-              On_boarded_at: null,
-              Active: true
-            });
-          }
+            const db = DatabaseConnection.getInstance();
+            db.get(
+                'SELECT * FROM User WHERE Email = ?',
+                [email],
+                (err: any, row: User) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
         }
       );
     });
   }
 
-  async updateUser(id: number, data: UpdateUserRequest): Promise<UserResponse | null> {
-    return new Promise((resolve, reject) => {
-      const updateFields = [];
-      const updateValues = [];
+    async createUser(userData: CreateUserRequest): Promise<User> {
+        const db = DatabaseConnection.getInstance();
+        const result = await new Promise<{ lastID: number }>((resolve, reject) => {
+            db.run(
+                'INSERT INTO User (Name, Email, Password) VALUES (?, ?, ?)',
+                [userData.Name, userData.Email || null, userData.Password],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ lastID: this.lastID });
+                }
+            );
+        });
 
-      if (data.Name !== undefined) {
-        updateFields.push('Name = ?');
-        updateValues.push(data.Name);
-      }
-      if (data.Email !== undefined) {
-        updateFields.push('Email = ?');
-        updateValues.push(data.Email);
-      }
-      if (data.Password !== undefined) {
-        updateFields.push('Password = ?');
-        updateValues.push(data.Password);
-      }
-      if (data.On_boarded_at !== undefined) {
-        updateFields.push('On_boarded_at = ?');
-        updateValues.push(data.On_boarded_at);
-      }
-      if (data.Active !== undefined) {
-        updateFields.push('Active = ?');
-        updateValues.push(data.Active ? 1 : 0);
-      }
+        const newUser = await this.getUserById(result.lastID);
+        if (!newUser) {
+            throw new Error('Failed to create user');
+        }
+        return newUser;
+    }
 
-      if (updateFields.length === 0) {
+    async updateUser(id: number, userData: UpdateUserRequest): Promise<User | null> {
+        const db = DatabaseConnection.getInstance();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                'UPDATE User SET Name = COALESCE(?, Name), Email = COALESCE(?, Email), Password = COALESCE(?, Password), Active = COALESCE(?, Active) WHERE id = ?',
+                [userData.Name, userData.Email, userData.Password, userData.Active, id],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
+      }
+            );
+        });
+
+        if (result.changes === 0) {
+            return null;
+        }
+
         return this.getUserById(id);
       }
 
-      updateValues.push(id);
-
-      this.getDb().run(
-        `UPDATE User SET ${updateFields.join(', ')} WHERE id = ?`,
-        updateValues,
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else if (this.changes === 0) {
-            resolve(null);
-          } else {
-            // 回傳更新後的用戶資料（不包含密碼）
-            resolve({
-              id: id,
-              Name: data.Name || '',
-              Email: data.Email || null,
-              Created_At: '',
-              On_boarded_at: data.On_boarded_at || null,
-              Active: data.Active !== undefined ? data.Active : true
-            });
-          }
+    async deleteUser(id: number): Promise<boolean> {
+        const db = DatabaseConnection.getInstance();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                'DELETE FROM User WHERE id = ?',
+                [id],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
         }
       );
     });
+
+        return result.changes > 0;
   }
 
-  async deleteUser(id: number): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.getDb().run('DELETE FROM User WHERE id = ?', [id], function(this: any, err: any) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(this.changes > 0);
-        }
-      });
-    });
+    async activateUser(id: number): Promise<User | null> {
+        return this.updateUser(id, { Active: true });
   }
 
-  async activateUser(id: number): Promise<UserResponse | null> {
-    const now = new Date().toISOString();
-    return this.updateUser(id, { Active: true, On_boarded_at: now });
-  }
-
-  async deactivateUser(id: number): Promise<UserResponse | null> {
+    async deactivateUser(id: number): Promise<User | null> {
     return this.updateUser(id, { Active: false });
   }
 } 

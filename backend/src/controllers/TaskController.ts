@@ -14,6 +14,9 @@ export class TaskController {
     this.create = this.create.bind(this);
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
+    this.markInProgress = this.markInProgress.bind(this);
+    this.markForReview = this.markForReview.bind(this);
+    this.markDone = this.markDone.bind(this);
   }
 
   // 獲取所有任務
@@ -72,7 +75,7 @@ export class TaskController {
   // 創建新任務
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { Content, User_Id } = req.body;
+      const { Content, User_Id, Work_in_progress, To_review, Done } = req.body;
       
       if (!Content || Content.trim() === '') {
         res.status(400).json({
@@ -81,10 +84,21 @@ export class TaskController {
         });
         return;
       }
+
+      if (!User_Id) {
+        res.status(400).json({
+          success: false,
+          message: 'User_Id is required'
+        });
+        return;
+      }
       
       const task = await this.taskService.createTask({
         Content: Content.trim(),
-        User_Id: User_Id ? parseInt(User_Id) : undefined
+        User_Id: parseInt(User_Id),
+        Work_in_progress: Boolean(Work_in_progress),
+        To_review: Boolean(To_review),
+        Done: Boolean(Done)
       });
       
       res.status(201).json({
@@ -103,36 +117,13 @@ export class TaskController {
       const { id } = req.params;
       const { Content, User_Id, Work_in_progress, To_review, Done } = req.body;
       
-      const updateData: any = {};
-      
-      if (Content !== undefined) {
-        if (Content.trim() === '') {
-          res.status(400).json({
-            success: false,
-            message: 'Content cannot be empty'
-          });
-          return;
-        }
-        updateData.Content = Content.trim();
-      }
-      
-      if (User_Id !== undefined) {
-        updateData.User_Id = User_Id ? parseInt(User_Id) : null;
-      }
-      
-      if (Work_in_progress !== undefined) {
-        updateData.Work_in_progress = Boolean(Work_in_progress);
-      }
-      
-      if (To_review !== undefined) {
-        updateData.To_review = Boolean(To_review);
-      }
-      
-      if (Done !== undefined) {
-        updateData.Done = Boolean(Done);
-      }
-      
-      const task = await this.taskService.updateTask(parseInt(id), updateData);
+      const task = await this.taskService.updateTask(parseInt(id), {
+        Content,
+        User_Id: User_Id ? parseInt(User_Id) : undefined,
+        Work_in_progress,
+        To_review,
+        Done
+      });
       
       if (!task) {
         res.status(404).json({
@@ -169,6 +160,78 @@ export class TaskController {
       res.json({
         success: true,
         message: 'Task deleted successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // 標記任務為進行中
+  async markInProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const task = await this.taskService.markTaskInProgress(parseInt(id));
+      
+      if (!task) {
+        res.status(404).json({
+          success: false,
+          message: 'Task not found'
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: task,
+        message: 'Task marked as in progress'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // 標記任務為待審核
+  async markForReview(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const task = await this.taskService.markTaskForReview(parseInt(id));
+      
+      if (!task) {
+        res.status(404).json({
+          success: false,
+          message: 'Task not found'
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: task,
+        message: 'Task marked for review'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // 標記任務為完成
+  async markDone(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const task = await this.taskService.markTaskDone(parseInt(id));
+      
+      if (!task) {
+        res.status(404).json({
+          success: false,
+          message: 'Task not found'
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: task,
+        message: 'Task marked as done'
       });
     } catch (error) {
       next(error);

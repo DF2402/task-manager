@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import '../styles/Navbar.css';
+import '../styles/Nav.css';
 
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,11 +38,7 @@ function Navbar() {
                             Calendar
                         </a>
                     </li>
-                    <li>
-                        <a href="/workers" className={isActive('/workers')}>
-                            Workers
-                        </a>
-                    </li>
+                    
                 </ul>
             </div>
         </nav>

@@ -1,0 +1,119 @@
+/* Header styles */
+.header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 16px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.header-logo img {
+    height: 32px;
+    width: auto;
+}
+
+.header-logo h1 {
+    font-size: 1.5rem;
+    color: #1a202c;
+    margin: 0;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-user-name {
+    font-size: 0.95rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.header-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.header-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: #4a5568;
+}
+
+.header-button:hover {
+    background: rgba(79, 172, 254, 0.1);
+    color: #4facfe;
+}
+
+.header-button.logout {
+    color: #e53e3e;
+}
+
+.header-button.logout:hover {
+    background: rgba(229, 62, 62, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 16px;
+    }
+
+    .header-logo h1 {
+        font-size: 1.2rem;
+    }
+
+    .header-user-name {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-logo img {
+        height: 24px;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .header-button {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+} 

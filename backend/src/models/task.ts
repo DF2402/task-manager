@@ -1,7 +1,7 @@
 export interface Task {
     id: number;
     Content: string;
-    User_Id: number | null;
+    User_Id: number;
     Work_in_progress: boolean;
     To_review: boolean;
     Done: boolean;
@@ -11,7 +11,10 @@ export interface Task {
 
 export interface CreateTaskRequest {
     Content: string;
-    User_Id?: number;
+    User_Id: number;
+    Work_in_progress?: boolean;
+    To_review?: boolean;
+    Done?: boolean;
 }
 
 export interface UpdateTaskRequest {

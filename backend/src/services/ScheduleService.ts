@@ -7,117 +7,113 @@ export class ScheduleService {
   }
 
   async getAllSchedules(): Promise<Schedule[]> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().all('SELECT * FROM Schedule ORDER BY Date DESC', (err: any, rows: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows as Schedule[]);
+            db.all(
+                'SELECT * FROM Schedule ORDER BY Date DESC',
+                (err: any, rows: Schedule[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
-      });
+            );
     });
   }
 
   async getScheduleById(id: number): Promise<Schedule | null> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().get('SELECT * FROM Schedule WHERE id = ?', [id], (err: any, row: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row as Schedule || null);
+            db.get(
+                'SELECT * FROM Schedule WHERE id = ?',
+                [id],
+                (err: any, row: Schedule) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
         }
-      });
+            );
     });
   }
 
   async getSchedulesByUserId(userId: number): Promise<Schedule[]> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().all(
+            db.all(
         'SELECT * FROM Schedule WHERE User_Id = ? ORDER BY Date DESC',
         [userId],
-        (err: any, rows: any) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(rows as Schedule[]);
-          }
+                (err: any, rows: Schedule[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
       );
     });
   }
 
-  async createSchedule(data: CreateScheduleRequest): Promise<Schedule> {
+    async getSchedulesByDate(date: string): Promise<Schedule[]> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      const now = new Date().toISOString();
-      this.getDb().run(
-        'INSERT INTO Schedule (User_Id, Date, Created_At) VALUES (?, ?, ?)',
-        [data.User_Id || null, data.Date || null, now],
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              id: this.lastID,
-              User_Id: data.User_Id || null,
-              Date: data.Date || null,
-              Created_At: now
-            });
-          }
+            db.all(
+                'SELECT * FROM Schedule WHERE Date LIKE ? ORDER BY User_Id',
+                [`${date}%`],
+                (err: any, rows: Schedule[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
       );
     });
   }
 
-  async updateSchedule(id: number, data: UpdateScheduleRequest): Promise<Schedule | null> {
-    return new Promise((resolve, reject) => {
-      const updateFields = [];
-      const updateValues = [];
+    async createSchedule(scheduleData: CreateScheduleRequest): Promise<Schedule> {
+        const db = this.getDb();
+        const result = await new Promise<{ lastID: number }>((resolve, reject) => {
+            db.run(
+                'INSERT INTO Schedule (User_Id, Date) VALUES (?, ?)',
+                [scheduleData.User_Id, scheduleData.Date],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ lastID: this.lastID });
+                }
+            );
+        });
 
-      if (data.User_Id !== undefined) {
-        updateFields.push('User_Id = ?');
-        updateValues.push(data.User_Id);
-      }
-      if (data.Date !== undefined) {
-        updateFields.push('Date = ?');
-        updateValues.push(data.Date);
-      }
+        const newSchedule = await this.getScheduleById(result.lastID);
+        if (!newSchedule) {
+            throw new Error('Failed to create schedule');
+        }
+        return newSchedule;
+    }
 
-      if (updateFields.length === 0) {
+    async updateSchedule(id: number, scheduleData: UpdateScheduleRequest): Promise<Schedule | null> {
+        const db = this.getDb();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                'UPDATE Schedule SET User_Id = COALESCE(?, User_Id), Date = COALESCE(?, Date) WHERE id = ?',
+                [scheduleData.User_Id, scheduleData.Date, id],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
+      }
+            );
+        });
+
+        if (result.changes === 0) {
+            return null;
+        }
+
         return this.getScheduleById(id);
       }
 
-      updateValues.push(id);
-
-      this.getDb().run(
-        `UPDATE Schedule SET ${updateFields.join(', ')} WHERE id = ?`,
-        updateValues,
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else if (this.changes === 0) {
-            resolve(null);
-          } else {
-            resolve({
-              id: id,
-              User_Id: data.User_Id || null,
-              Date: data.Date || null,
-              Created_At: ''
-            });
-          }
+    async deleteSchedule(id: number): Promise<boolean> {
+        const db = this.getDb();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                'DELETE FROM Schedule WHERE id = ?',
+                [id],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
         }
       );
     });
-  }
 
-  async deleteSchedule(id: number): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.getDb().run('DELETE FROM Schedule WHERE id = ?', [id], function(this: any, err: any) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(this.changes > 0);
-        }
-      });
-    });
+        return result.changes > 0;
   }
 } 

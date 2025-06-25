@@ -1,13 +1,13 @@
 export interface Schedule {
     id: number;
-    User_Id: number | null;
-    Date: string | null;
+    User_Id: number;
+    Date: string;
     Created_At: string;
 }
 
 export interface CreateScheduleRequest {
-    User_Id?: number;
-    Date?: string;
+    User_Id: number;
+    Date: string;
 }
 
 export interface UpdateScheduleRequest {

@@ -7,139 +7,131 @@ export class TaskService {
   }
 
   async getAllTasks(): Promise<Task[]> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().all('SELECT * FROM Task ORDER BY Created_At DESC', (err: any, rows: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows as Task[]);
+            db.all(
+                'SELECT * FROM Task ORDER BY Created_At DESC',
+                (err: any, rows: Task[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
-      });
+            );
     });
   }
 
   async getTaskById(id: number): Promise<Task | null> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().get('SELECT * FROM Task WHERE id = ?', [id], (err: any, row: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row as Task || null);
+            db.get(
+                'SELECT * FROM Task WHERE id = ?',
+                [id],
+                (err: any, row: Task) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
         }
-      });
+            );
     });
   }
 
   async getTasksByUserId(userId: number): Promise<Task[]> {
+        const db = this.getDb();
     return new Promise((resolve, reject) => {
-      this.getDb().all(
+            db.all(
         'SELECT * FROM Task WHERE User_Id = ? ORDER BY Created_At DESC',
         [userId],
-        (err: any, rows: any) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(rows as Task[]);
-          }
+                (err: any, rows: Task[]) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
         }
       );
     });
   }
 
-  async createTask(data: CreateTaskRequest): Promise<Task> {
-    return new Promise((resolve, reject) => {
-      const now = new Date().toISOString();
-      this.getDb().run(
-        'INSERT INTO Task (Content, User_Id, Work_in_progress, To_review, Done, Created_At, Updated_At) VALUES (?, ?, 0, 0, 0, ?, ?)',
-        [data.Content, data.User_Id || null, now, now],
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              id: this.lastID,
-              Content: data.Content,
-              User_Id: data.User_Id || null,
-              Work_in_progress: false,
-              To_review: false,
-              Done: false,
-              Created_At: now,
-              Updated_At: now
-            });
-          }
+    async createTask(taskData: CreateTaskRequest): Promise<Task> {
+        const db = this.getDb();
+        const result = await new Promise<{ lastID: number }>((resolve, reject) => {
+            db.run(
+                'INSERT INTO Task (Content, User_Id, Work_in_progress, To_review, Done) VALUES (?, ?, ?, ?, ?)',
+                [
+                    taskData.Content,
+                    taskData.User_Id,
+                    taskData.Work_in_progress ? 1 : 0,
+                    taskData.To_review ? 1 : 0,
+                    taskData.Done ? 1 : 0
+                ],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ lastID: this.lastID });
         }
       );
     });
+
+        const newTask = await this.getTaskById(result.lastID);
+        if (!newTask) {
+            throw new Error('Failed to create task');
+        }
+        return newTask;
   }
 
-  async updateTask(id: number, data: UpdateTaskRequest): Promise<Task | null> {
-    return new Promise((resolve, reject) => {
-      const now = new Date().toISOString();
-      
-      // 構建動態更新查詢
-      const updates: string[] = [];
-      const values: any[] = [];
-      
-      if (data.Content !== undefined) {
-        updates.push('Content = ?');
-        values.push(data.Content);
-      }
-      if (data.User_Id !== undefined) {
-        updates.push('User_Id = ?');
-        values.push(data.User_Id);
-      }
-      if (data.Work_in_progress !== undefined) {
-        updates.push('Work_in_progress = ?');
-        values.push(data.Work_in_progress ? 1 : 0);
-      }
-      if (data.To_review !== undefined) {
-        updates.push('To_review = ?');
-        values.push(data.To_review ? 1 : 0);
-      }
-      if (data.Done !== undefined) {
-        updates.push('Done = ?');
-        values.push(data.Done ? 1 : 0);
-      }
-      
-      updates.push('Updated_At = ?');
-      values.push(now);
-      values.push(id);
-
-      this.getDb().run(
-        `UPDATE Task SET ${updates.join(', ')} WHERE id = ?`,
-        values,
-        function(this: any, err: any) {
-          if (err) {
-            reject(err);
-          } else if (this.changes === 0) {
-            resolve(null);
-          } else {
-            // 獲取更新後的記錄
-            resolve({
-              id: id,
-              Content: data.Content || '',
-              User_Id: data.User_Id || null,
-              Work_in_progress: data.Work_in_progress || false,
-              To_review: data.To_review || false,
-              Done: data.Done || false,
-              Created_At: '',
-              Updated_At: now
-            });
-          }
+    async updateTask(id: number, taskData: UpdateTaskRequest): Promise<Task | null> {
+        const db = this.getDb();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                `UPDATE Task SET 
+                    Content = COALESCE(?, Content),
+                    User_Id = COALESCE(?, User_Id),
+                    Work_in_progress = COALESCE(?, Work_in_progress),
+                    To_review = COALESCE(?, To_review),
+                    Done = COALESCE(?, Done),
+                    Updated_At = CURRENT_TIMESTAMP
+                WHERE id = ?`,
+                [
+                    taskData.Content,
+                    taskData.User_Id,
+                    taskData.Work_in_progress !== undefined ? (taskData.Work_in_progress ? 1 : 0) : null,
+                    taskData.To_review !== undefined ? (taskData.To_review ? 1 : 0) : null,
+                    taskData.Done !== undefined ? (taskData.Done ? 1 : 0) : null,
+                    id
+                ],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
         }
       );
     });
+
+        if (result.changes === 0) {
+            return null;
+        }
+
+        return this.getTaskById(id);
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.getDb().run('DELETE FROM Task WHERE id = ?', [id], function(this: any, err: any) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(this.changes > 0);
+        const db = this.getDb();
+        const result = await new Promise<{ changes: number }>((resolve, reject) => {
+            db.run(
+                'DELETE FROM Task WHERE id = ?',
+                [id],
+                function(err: any) {
+                    if (err) reject(err);
+                    else resolve({ changes: this.changes });
+                }
+            );
+        });
+
+        return result.changes > 0;
+    }
+
+    async markTaskInProgress(id: number): Promise<Task | null> {
+        return this.updateTask(id, { Work_in_progress: true, To_review: false, Done: false });
         }
-      });
-    });
+
+    async markTaskForReview(id: number): Promise<Task | null> {
+        return this.updateTask(id, { Work_in_progress: false, To_review: true, Done: false });
+    }
+
+    async markTaskDone(id: number): Promise<Task | null> {
+        return this.updateTask(id, { Work_in_progress: false, To_review: false, Done: true });
   }
 } 

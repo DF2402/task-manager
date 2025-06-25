@@ -1,5 +1,4 @@
 import Calendar from '../components/calendar';
-import '../styles/Calendar.css';
 import { useState, useEffect } from 'react';
 
 interface AttendanceData {

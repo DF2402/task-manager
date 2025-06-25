@@ -11,12 +11,13 @@ export class ScheduleController {
     this.getAll = this.getAll.bind(this);
     this.getById = this.getById.bind(this);
     this.getByUserId = this.getByUserId.bind(this);
+    this.getByDate = this.getByDate.bind(this);
     this.create = this.create.bind(this);
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
   }
 
-  // 獲取所有排程
+  // 獲取所有日程
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const schedules = await this.scheduleService.getAllSchedules();
@@ -30,7 +31,7 @@ export class ScheduleController {
     }
   }
 
-  // 根據ID獲取排程
+  // 根據ID獲取日程
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
@@ -53,7 +54,7 @@ export class ScheduleController {
     }
   }
 
-  // 根據用戶ID獲取排程
+  // 根據用戶ID獲取日程
   async getByUserId(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { userId } = req.params;
@@ -69,14 +70,46 @@ export class ScheduleController {
     }
   }
 
-  // 創建新排程
+  // 根據日期獲取日程
+  async getByDate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { date } = req.params;
+      const schedules = await this.scheduleService.getSchedulesByDate(date);
+      
+      res.json({
+        success: true,
+        data: schedules,
+        count: schedules.length
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // 創建新日程
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { User_Id, Date } = req.body;
       
+      if (!User_Id) {
+        res.status(400).json({
+          success: false,
+          message: 'User_Id is required'
+        });
+        return;
+      }
+
+      if (!Date) {
+        res.status(400).json({
+          success: false,
+          message: 'Date is required'
+        });
+        return;
+      }
+      
       const schedule = await this.scheduleService.createSchedule({
-        User_Id: User_Id ? parseInt(User_Id) : undefined,
-        Date: Date || undefined
+        User_Id: parseInt(User_Id),
+        Date
       });
       
       res.status(201).json({
@@ -89,23 +122,16 @@ export class ScheduleController {
     }
   }
 
-  // 更新排程
+  // 更新日程
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const { User_Id, Date } = req.body;
       
-      const updateData: any = {};
-      
-      if (User_Id !== undefined) {
-        updateData.User_Id = User_Id ? parseInt(User_Id) : null;
-      }
-      
-      if (Date !== undefined) {
-        updateData.Date = Date || null;
-      }
-      
-      const schedule = await this.scheduleService.updateSchedule(parseInt(id), updateData);
+      const schedule = await this.scheduleService.updateSchedule(parseInt(id), {
+        User_Id: User_Id ? parseInt(User_Id) : undefined,
+        Date
+      });
       
       if (!schedule) {
         res.status(404).json({
@@ -125,7 +151,7 @@ export class ScheduleController {
     }
   }
 
-  // 刪除排程
+  // 刪除日程
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;

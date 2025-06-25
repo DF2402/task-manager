@@ -1,20 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/UserService';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../database/connection';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export class UserController {
   private userService: UserService;
 
   constructor() {
     this.userService = new UserService();
-    
-    // 綁定 this 上下文
-    this.getAll = this.getAll.bind(this);
-    this.getById = this.getById.bind(this);
-    this.create = this.create.bind(this);
-    this.update = this.update.bind(this);
-    this.delete = this.delete.bind(this);
-    this.activate = this.activate.bind(this);
-    this.deactivate = this.deactivate.bind(this);
   }
 
   // 獲取所有用戶
@@ -109,39 +105,12 @@ export class UserController {
       const { id } = req.params;
       const { Name, Email, Password, Active } = req.body;
       
-      const updateData: any = {};
-      
-      if (Name !== undefined) {
-        if (Name.trim() === '') {
-          res.status(400).json({
-            success: false,
-            message: 'Name cannot be empty'
-          });
-          return;
-        }
-        updateData.Name = Name.trim();
-      }
-      
-      if (Email !== undefined) {
-        updateData.Email = Email.trim() || null;
-      }
-      
-      if (Password !== undefined) {
-        if (Password.trim() === '') {
-          res.status(400).json({
-            success: false,
-            message: 'Password cannot be empty'
-          });
-          return;
-        }
-        updateData.Password = Password.trim();
-      }
-      
-      if (Active !== undefined) {
-        updateData.Active = Boolean(Active);
-      }
-      
-      const user = await this.userService.updateUser(parseInt(id), updateData);
+            const user = await this.userService.updateUser(parseInt(id), {
+                Name,
+                Email,
+                Password,
+                Active
+            });
       
       if (!user) {
         res.status(404).json({
@@ -229,6 +198,110 @@ export class UserController {
       });
     } catch (error) {
       next(error);
+    }
+  }
+
+  // Register new user
+  async register(req: Request, res: Response) {
+    const { username, password } = req.body;
+
+    try {
+      // Check if username already exists
+      const userExists = await pool.query(
+        'SELECT * FROM users WHERE username = $1',
+        [username]
+      );
+
+      if (userExists.rows.length > 0) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create user with default role 'user'
+      const result = await pool.query(
+        'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role',
+        [username, hashedPassword, 'user']
+      );
+
+      res.status(201).json({
+        message: 'User registered successfully',
+        user: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: 'Server error during registration' });
+    }
+  }
+
+  // Login user
+  async login(req: Request, res: Response) {
+    const { username, password } = req.body;
+
+    try {
+      // Find user
+      const result = await pool.query(
+        'SELECT * FROM users WHERE username = $1',
+        [username]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const user = result.rows[0];
+
+      // Verify password
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          username: user.username,
+          role: user.role 
+        },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        message: 'Login successful',
+        token,
+        userId: user.id,
+        username: user.username,
+        role: user.role
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Server error during login' });
+    }
+  }
+
+  // Get user profile
+  async getProfile(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.userId;
+
+      const result = await pool.query(
+        'SELECT id, username, role, created_at FROM users WHERE id = $1',
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      res.status(500).json({ message: 'Server error while fetching profile' });
     }
   }
 } 

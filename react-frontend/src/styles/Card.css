@@ -1,67 +1,527 @@
-/* 卡片容器 */
+/* 基礎卡片樣式 */
 .card {
-    background-color: #fff; /* 背景色 */
-    border-radius: 8px; /* 圆角 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
-    padding: 16px; /* 内边距 */
-    margin: 16px; /* 外边距 */
-    transition: box-shadow 0.3s ease; /* 悬停阴影动画 */
-  }
-  
-  /* 悬停效果 */
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    margin: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 200px;
+}
+
+/* 靜態卡片樣式（無懸停效果） */
+.card-static {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    margin: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 200px;
+}
+
   .card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+    border-color: rgba(79, 172, 254, 0.3);
   }
   
-  /* 标题样式 */
+/* 卡片布局 */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
   .card-title {
     font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 12px;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: #1a202c;
+    flex: 1;
+    line-height: 1.4;
   }
   
-  /* 内容文本 */
   .card-content {
     font-size: 1rem;
-    color: #333;
+    color: #2d3748;
+    flex: 1;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.card-info {
+    font-size: 0.9rem;
+    color: #4a5568;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.card-meta {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+    margin-top: auto;
+}
+
+.card-date {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+/* 狀態標籤 */
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    min-width: fit-content;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.status-badge.done {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    border: none;
+}
+
+.status-badge.review {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    color: white;
+    border: none;
+}
+
+.status-badge.progress {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+}
+
+.status-badge.todo {
+    background: linear-gradient(135deg, #a0aec0, #718096);
+    color: white;
+    border: none;
   }
   
-  /* 图片（可选） */
-  .card-img {
+/* 網格布局 */
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 按鈕樣式 */
+.card-button {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.card-button:hover {
+    background: linear-gradient(135deg, #00f2fe, #4facfe);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+/* 輸入框樣式 */
+.card-input {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #1a202c;
+    border: 2px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-top: 10px;
+    margin-left: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
     width: 100%;
-    border-radius: 8px 8px 0 0; /* 只在顶部圆角 */
-    margin-bottom: 12px;
-  }
+    max-width: 300px;
+    transition: all 0.3s ease;
+}
 
-  .add-btn {
-    background-color: #227e0a92;
-    color: black;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+.card-input:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+/* 下拉選單樣式 */
+.card-select {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #1a202c;
+    border: 2px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 12px;
     margin-top: 10px;
     margin-left: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 100%;
+    max-width: 300px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.card-select:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.card-select:hover {
+    border-color: #4facfe;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+/* 文件管理 */
+.file-management-section {
+    margin-top: 20px;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.file-management-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.file-management-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.file-management-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%) !important;
+}
+
+/* 文件預覽 */
+.file-preview-container {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.file-preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.file-icon {
+    font-size: 2.5rem;
+    color: #666666;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #2d3748;
+    word-break: break-word;
+}
+
+.file-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+/* 預覽模態框 */
+.preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.preview-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.preview-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.preview-file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.preview-file-icon {
+    font-size: 1.5rem;
+}
+
+.preview-file-name {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 5px;
+}
+
+/* 文本編輯器 */
+.text-editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.text-editor-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.text-editor-textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    resize: vertical;
+    min-height: 200px;
+}
+
+/* 狀態消息 */
+.file-management-status {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.file-management-status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.file-management-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .tasks-grid {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 16px;
+    }
+    
+    .card {
+        margin: 8px;
+        padding: 12px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .file-preview-container {
+        height: 120px;
+    }
+    
+    .preview-modal-content {
+        width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-title {
+        font-size: 1rem;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+}
+
+/* 文件上傳 */
+.file-upload-input-container {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-upload-input {
+    display: none;
+}
+
+.file-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.file-upload-label:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.file-upload-label:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.file-upload-icon {
+    font-size: 1.2em;
+    margin-right: 8px;
   }
 
-  .card-select {
-    background-color: #ffffff;
-    color: black;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-left: 10px;
-  }
+/* 登錄頁面樣式 */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f6f9fc 0%, #e9ecef 100%);
+    padding: 20px;
+}
 
-  .card-input {
-    background-color: #ffffff;
-    color: black;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-left: 10px;
+.login-page .card {
+    max-width: 400px;
+    width: 100%;
+    margin: 0;
+}
+
+.login-page .card-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.login-page .card-header h1 {
+    font-size: 2rem;
+    color: #1a202c;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    color: #c53030;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid #feb2b2;
+}
+
+.login-page .card-button {
+    width: calc(50% - 10px);
+    margin: 5px;
+}
+
+.login-page .card-input {
+    margin-left: 0;
+    max-width: 100%;
   }

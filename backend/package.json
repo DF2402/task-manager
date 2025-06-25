@@ -9,9 +9,11 @@
     "dev": "ts-node src/app.ts",
     "dev:backend": "ts-node src/app.ts",
     "init-db": "ts-node src/scripts/initDatabase.ts",
+    "migrate": "ts-node src/scripts/migrate.ts",
     "seed": "ts-node src/scripts/seed.ts",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
     "setup": "npm run init-db && npm run seed",
-    "migration": "ts-node src/scripts/manualMigration.ts",
+    "setup:migrate": "npm run migrate && npm run seed:users",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -24,9 +26,17 @@
   "license": "ISC",
   "dependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^1.4.13",
+    "@types/pg": "^8.15.4",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
+    "pg": "^8.16.2",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {

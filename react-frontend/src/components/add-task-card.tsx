@@ -1,129 +1,66 @@
 import { useState, useEffect } from 'react';
-import { Worker } from '../types/worker';
-import '../styles/Card.css';
+import { User } from '../types/user';
 
-interface AddTaskCardProps {
-    onTaskAdded: () => void;
+export interface AddTaskCardProps {
+    onTaskAdded: (taskContent: string, userId: number) => Promise<void>;
+    users: User[];
 }
 
-function AddTaskCard({ onTaskAdded }: AddTaskCardProps) {
-    const [workers, setWorkers] = useState<Worker[]>([]);
-    const [selectedWorker, setSelectedWorker] = useState<number | ''>('');
+function AddTaskCard({ onTaskAdded, users }: AddTaskCardProps) {
+    const [loading, setLoading] = useState(false);
     const [taskName, setTaskName] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [selectedUser, setSelectedUser] = useState<number>(0);
 
-    useEffect(() => {
-        fetchWorkers();
-    }, []);
-
-    const fetchWorkers = async () => {
-        try {
-            const response = await fetch('http://localhost:3001/api/workers');
-            if (!response.ok) {
-                throw new Error('Failed to fetch workers');
-            }
-            const data = await response.json();
-            setWorkers(data.data);
-            setLoading(false);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch workers');
-            setLoading(false);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedWorker || !taskName.trim()) {
-            setError('Please fill in all required fields');
+    const handleAddTask = async () => {
+        if (!taskName.trim() || selectedUser === 0) {
+            alert('Please enter task content and select a user');
             return;
         }
-
+        
         try {
-            const response = await fetch('http://localhost:3001/api/tasks', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Content: taskName,
-                    Worker_Id: selectedWorker,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to add task');
-            }
-
-            setSuccessMessage('Task added successfully!');
+            setLoading(true);
+            await onTaskAdded(taskName, selectedUser);
             setTaskName('');
-            setSelectedWorker('');
-            setError(null);
-            onTaskAdded(); // 調用父組件的更新函數
-
-            // 3秒後清除成功訊息
-            setTimeout(() => {
-                setSuccessMessage(null);
-            }, 3000);
-
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add task');
+            setSelectedUser(0);
+        } catch (error) {
+            console.error('Failed to add task:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     if (loading) {
-        return <div className="loading">Loading...</div>;
+        return <div className="loading">Adding task...</div>;
     }
 
     return (
-        <div className="card">
-            <h3>Add Task</h3>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="worker-select">Select Worker:</label>
-                    <select
-                        className="card-select"
-                        id="worker-select"
-                        value={selectedWorker}
-                        onChange={(e) => {
-                            setSelectedWorker(e.target.value ? Number(e.target.value) : '');
-                            setError(null);
-                        }}
-                    >
-                        <option value="">Select Worker</option>
-                        {workers.map(worker => (
-                            <option key={worker.id} value={worker.id}>
-                                {worker.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="task-name" className="card-content">Task Name:</label>
-                    <input
-                        className="card-input"
-                        type="text"
-                        id="task-name"
-                        value={taskName}
-                        onChange={(e) => {
-                            setTaskName(e.target.value);
-                            setError(null);
-                        }}
-                        placeholder="Please enter the task name"
-                    />
-                </div>
-
-                {error && <div className="error-message">{error}</div>}
-                {successMessage && <div className="success-message">{successMessage}</div>}
-
-                <div className="form-group">
-                    <button type="submit" className="add-btn">
-                        Add Task
-                    </button>
-                </div>
-            </form>
+       <div className="card">
+        <div className="card-header">
+            <div className="card-title">Add Task</div>
+        </div>
+        <div className="card-content">
+            <div className="card-input">
+                <input 
+                    type="text" 
+                    placeholder="Task Content" 
+                    value={taskName}
+                    onChange={(e) => setTaskName(e.target.value)}
+                />
+            </div>
+                <select
+                className="card-select" 
+                value={selectedUser} 
+                onChange={(e) => setSelectedUser(Number(e.target.value))}
+                >
+                <option value={0}>Select User</option>
+                {users.map((user) => (
+                    <option key={user.id} value={user.id}>{user.Name}</option>
+                    ))}
+                </select>
+            <button className="card-button" onClick={handleAddTask}>
+                Add Task
+            </button>
+            </div>
         </div>
     );
 }

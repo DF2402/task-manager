@@ -1,6 +1,7 @@
 // 核心數據庫連接邏輯
 import sqlite3 from 'sqlite3';
 import { DatabaseConfig } from '../config/database';
+import { Pool } from 'pg';
 
 // 核心數據庫類型定義
 export type ConnectionStatus = 'connected' | 'disconnected' | 'error';
@@ -112,3 +113,16 @@ export class ConnectionManager {
     this.connections.clear();
   }
 }
+
+export const pool = new Pool({
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME || 'task_manager',
+    password: process.env.DB_PASSWORD || 'your_password',
+    port: parseInt(process.env.DB_PORT || '5432'),
+});
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+});

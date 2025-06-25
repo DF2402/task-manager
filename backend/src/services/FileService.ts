@@ -1,6 +1,11 @@
 import { DatabaseConnection } from '../database/connection';
 import { File, CreateFileRequest, UpdateFileRequest } from '../models/file';
 
+// 添加新的接口類型
+interface CreateFileWithTaskRequest extends CreateFileRequest {
+  Task_Id: number;
+}
+
 export class FileService {
   private getDb() {
     return DatabaseConnection.getInstance();
@@ -30,6 +35,26 @@ export class FileService {
     });
   }
 
+  // 根據任務ID獲取文件
+  async getFilesByTaskId(taskId: number): Promise<File[]> {
+    return new Promise((resolve, reject) => {
+      this.getDb().all(
+        `SELECT f.* FROM File f 
+         INNER JOIN Upload u ON f.id = u.File_Id 
+         WHERE u.Task_Id = ? 
+         ORDER BY f.Created_At DESC`,
+        [taskId],
+        (err: any, rows: any) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows as File[]);
+          }
+        }
+      );
+    });
+  }
+
   async createFile(data: CreateFileRequest): Promise<File> {
     return new Promise((resolve, reject) => {
       const now = new Date().toISOString();
@@ -52,6 +77,58 @@ export class FileService {
           }
         }
       );
+    });
+  }
+
+  // 創建文件並關聯到任務
+  async createFileWithTask(data: CreateFileWithTaskRequest): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const db = this.getDb();
+      const now = new Date().toISOString();
+      
+      // 開始事務
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // 插入文件記錄
+        db.run(
+          'INSERT INTO File (File_Name, File_Path, File_Type, File_Size, Created_At, Updated_At) VALUES (?, ?, ?, ?, ?, ?)',
+          [data.File_Name, data.File_Path, data.File_Type, data.File_Size, now, now],
+          function(this: any, err: any) {
+            if (err) {
+              db.run('ROLLBACK');
+              reject(err);
+              return;
+            }
+            
+            const fileId = this.lastID;
+            
+            // 插入上傳關聯記錄
+            db.run(
+              'INSERT INTO Upload (Task_Id, File_Id, Created_At) VALUES (?, ?, ?)',
+              [data.Task_Id, fileId, now],
+              function(this: any, uploadErr: any) {
+                if (uploadErr) {
+                  db.run('ROLLBACK');
+                  reject(uploadErr);
+                  return;
+                }
+                
+                db.run('COMMIT');
+                resolve({
+                  id: fileId,
+                  File_Name: data.File_Name,
+                  File_Path: data.File_Path,
+                  File_Type: data.File_Type,
+                  File_Size: data.File_Size,
+                  Created_At: now,
+                  Updated_At: now
+                });
+              }
+            );
+          }
+        );
+      });
     });
   }
 
@@ -113,12 +190,32 @@ export class FileService {
 
   async deleteFile(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.getDb().run('DELETE FROM File WHERE id = ?', [id], function(this: any, err: any) {
+      const db = this.getDb();
+      
+      // 開始事務，先刪除關聯記錄，再刪除文件記錄
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // 刪除上傳關聯記錄
+        db.run('DELETE FROM Upload WHERE File_Id = ?', [id], function(this: any, err: any) {
         if (err) {
+            db.run('ROLLBACK');
           reject(err);
-        } else {
+            return;
+          }
+          
+          // 刪除文件記錄
+          db.run('DELETE FROM File WHERE id = ?', [id], function(this: any, fileErr: any) {
+            if (fileErr) {
+              db.run('ROLLBACK');
+              reject(fileErr);
+              return;
+            }
+            
+            db.run('COMMIT');
           resolve(this.changes > 0);
-        }
+          });
+        });
       });
     });
   }
