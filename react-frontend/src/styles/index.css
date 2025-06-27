@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定義卡片組件 */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow;
+  }
+
+  .card:hover {
+    @apply bg-gradient-to-br from-white via-slate-100 to-slate-200 
+           shadow-card-hover -translate-y-1 
+           border-blue-200/30;
+  }
+
+  .card-static {
+    @apply bg-gradient-to-br from-white via-slate-50 to-slate-100 
+           backdrop-blur-sm border border-slate-200/60 
+           rounded-2xl shadow-card p-4 m-4 
+           flex flex-col min-h-48;
+  }
+
+  .card-header {
+    @apply flex justify-between items-start mb-3 gap-2.5;
+  }
+
+  .card-title {
+    @apply text-xl font-bold text-slate-800 flex-1 leading-tight;
+  }
+
+  .card-content {
+    @apply text-base text-slate-700 flex-1 mb-3 font-medium;
+  }
+
+  .card-info {
+    @apply text-sm text-slate-600 mb-2 font-semibold;
+  }
+
+  .card-meta {
+    @apply border-t border-slate-200 pt-3 mt-auto;
+  }
+
+  .card-date {
+    @apply text-xs text-slate-500 mb-1 font-medium;
+  }
+
+  .status-badge {
+    @apply inline-block px-3 py-1.5 rounded-full text-xs font-bold 
+           uppercase tracking-wide whitespace-nowrap min-w-fit 
+           shadow-md;
+  }
+
+  .status-badge.done {
+    @apply bg-gradient-to-r from-green-500 to-green-600 text-white;
+  }
+
+  .status-badge.review {
+    @apply bg-gradient-to-r from-orange-500 to-orange-600 text-white;
+  }
+
+  .status-badge.progress {
+    @apply bg-gradient-to-r from-blue-400 to-blue-500 text-white;
+  }
+
+  .status-badge.todo {
+    @apply bg-gradient-to-r from-slate-400 to-slate-500 text-white;
+  }
+
+  .tasks-grid {
+    @apply grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] 
+           gap-5 p-5 max-w-6xl mx-auto;
+  }
+
+  .tasks-list {
+    @apply flex flex-col;
+  }
+
+  .card-button {
+    @apply bg-gradient-to-r from-blue-400 to-blue-500 text-white 
+           border-0 px-4 py-2 rounded-xl cursor-pointer 
+           mt-2.5 ml-2.5 text-sm font-semibold 
+           transition-all duration-300 
+           shadow-[0_4px_15px_rgba(79,172,254,0.3)]
+           hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-400 
+           hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(79,172,254,0.4)];
+  }
+
+  .card-input {
+    @apply bg-gradient-to-b from-white to-slate-50 text-slate-800 
+           border-2 border-slate-200 px-3 py-2 rounded-xl 
+           mt-2.5 ml-2.5 text-sm font-medium 
+           w-[calc(100%-1.25rem)] max-w-xs 
+           transition-all duration-300 box-border
+           focus:border-blue-400 focus:shadow-[0_0_0_3px_rgba(79,172,254,0.1)] 
+           focus:bg-gradient-to-b focus:from-white focus:to-slate-100 
+           focus:outline-none;
+  }
+
+  .card-select {
+    @apply bg-gradient-to-b from-white to-slate-50 text-slate-800 
+           border-2 border-slate-200 px-3 py-2 pr-10 rounded-xl 
+           mt-2.5 ml-2.5 text-sm font-medium 
+           w-[calc(100%-1.25rem)] max-w-xs 
+           transition-all duration-300 cursor-pointer 
+           appearance-none box-border
+           focus:border-blue-400 focus:shadow-[0_0_0_3px_rgba(79,172,254,0.1)] 
+           focus:bg-gradient-to-b focus:from-white focus:to-slate-100 
+           focus:outline-none
+           hover:border-blue-400 hover:bg-gradient-to-b hover:from-white hover:to-slate-100;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .card, .card-static {
+    @apply m-2 p-3;
+  }
+
+  .card-header {
+    @apply flex-col items-start gap-2;
+  }
+
+  .card-title {
+    @apply text-lg;
+  }
+
+  .tasks-grid {
+    @apply grid-cols-1 p-2.5 gap-4;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-title {
+    @apply text-base;
+  }
+
+  .status-badge {
+    @apply text-[0.7rem] px-2 py-1;
+  }
+}

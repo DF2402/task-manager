@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { UserService } from '../services/UserService';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { pool } from '../database/connection';
+import { Request, Response, NextFunction } from "express";
+import { UserService } from "../services/UserService";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { pool } from "../database/connection";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export class UserController {
   private userService: UserService;
@@ -20,7 +20,6 @@ export class UserController {
       res.json({
         success: true,
         data: users,
-        count: users.length
       });
     } catch (error) {
       next(error);
@@ -28,22 +27,26 @@ export class UserController {
   }
 
   // 根據ID獲取用戶
-  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getById(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const user = await this.userService.getUserById(parseInt(id));
-      
+
       if (!user) {
         res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
         return;
       }
-      
+
       res.json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -54,19 +57,19 @@ export class UserController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { Name, Email, Password } = req.body;
-      
-      if (!Name || Name.trim() === '') {
+
+      if (!Name || Name.trim() === "") {
         res.status(400).json({
           success: false,
-          message: 'Name is required'
+          message: "Name is required",
         });
         return;
       }
-      
-      if (!Password || Password.trim() === '') {
+
+      if (!Password || Password.trim() === "") {
         res.status(400).json({
           success: false,
-          message: 'Password is required'
+          message: "Password is required",
         });
         return;
       }
@@ -77,22 +80,22 @@ export class UserController {
         if (existingUser) {
           res.status(409).json({
             success: false,
-            message: 'Email already exists'
+            message: "Email already exists",
           });
           return;
         }
       }
-      
+
       const user = await this.userService.createUser({
         Name: Name.trim(),
         Email: Email?.trim() || undefined,
-        Password: Password.trim()
+        Password: Password.trim(),
       });
-      
+
       res.status(201).json({
         success: true,
         data: user,
-        message: 'User created successfully'
+        message: "User created successfully",
       });
     } catch (error) {
       next(error);
@@ -104,26 +107,26 @@ export class UserController {
     try {
       const { id } = req.params;
       const { Name, Email, Password, Active } = req.body;
-      
-            const user = await this.userService.updateUser(parseInt(id), {
-                Name,
-                Email,
-                Password,
-                Active
-            });
-      
+
+      const user = await this.userService.updateUser(parseInt(id), {
+        Name,
+        Email,
+        Password,
+        Active,
+      });
+
       if (!user) {
         res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
         return;
       }
-      
+
       res.json({
         success: true,
         data: user,
-        message: 'User updated successfully'
+        message: "User updated successfully",
       });
     } catch (error) {
       next(error);
@@ -135,18 +138,18 @@ export class UserController {
     try {
       const { id } = req.params;
       const success = await this.userService.deleteUser(parseInt(id));
-      
+
       if (!success) {
         res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
         return;
       }
-      
+
       res.json({
         success: true,
-        message: 'User deleted successfully'
+        message: "User deleted successfully",
       });
     } catch (error) {
       next(error);
@@ -154,23 +157,27 @@ export class UserController {
   }
 
   // 啟用用戶
-  async activate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async activate(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const user = await this.userService.activateUser(parseInt(id));
-      
+
       if (!user) {
         res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
         return;
       }
-      
+
       res.json({
         success: true,
         data: user,
-        message: 'User activated successfully'
+        message: "User activated successfully",
       });
     } catch (error) {
       next(error);
@@ -178,23 +185,27 @@ export class UserController {
   }
 
   // 停用用戶
-  async deactivate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async deactivate(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const user = await this.userService.deactivateUser(parseInt(id));
-      
+
       if (!user) {
         res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
         return;
       }
-      
+
       res.json({
         success: true,
         data: user,
-        message: 'User deactivated successfully'
+        message: "User deactivated successfully",
       });
     } catch (error) {
       next(error);
@@ -208,12 +219,12 @@ export class UserController {
     try {
       // Check if username already exists
       const userExists = await pool.query(
-        'SELECT * FROM users WHERE username = $1',
+        "SELECT * FROM users WHERE username = $1",
         [username]
       );
 
       if (userExists.rows.length > 0) {
-        return res.status(400).json({ message: 'Username already exists' });
+        return res.status(400).json({ message: "Username already exists" });
       }
 
       // Hash password
@@ -222,17 +233,17 @@ export class UserController {
 
       // Create user with default role 'user'
       const result = await pool.query(
-        'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role',
-        [username, hashedPassword, 'user']
+        "INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role",
+        [username, hashedPassword, "user"]
       );
 
       res.status(201).json({
-        message: 'User registered successfully',
-        user: result.rows[0]
+        message: "User registered successfully",
+        user: result.rows[0],
       });
     } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Server error during registration' });
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Server error during registration" });
     }
   }
 
@@ -243,12 +254,12 @@ export class UserController {
     try {
       // Find user
       const result = await pool.query(
-        'SELECT * FROM users WHERE username = $1',
+        "SELECT * FROM users WHERE username = $1",
         [username]
       );
 
       if (result.rows.length === 0) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const user = result.rows[0];
@@ -257,30 +268,30 @@ export class UserController {
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       // Generate JWT token
       const token = jwt.sign(
-        { 
-          userId: user.id, 
+        {
+          userId: user.id,
           username: user.username,
-          role: user.role 
+          role: user.role,
         },
         JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
       res.json({
-        message: 'Login successful',
+        message: "Login successful",
         token,
         userId: user.id,
         username: user.username,
-        role: user.role
+        role: user.role,
       });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Server error during login' });
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Server error during login" });
     }
   }
 
@@ -290,18 +301,18 @@ export class UserController {
       const userId = (req as any).user.userId;
 
       const result = await pool.query(
-        'SELECT id, username, role, created_at FROM users WHERE id = $1',
+        "SELECT id, username, role, created_at FROM users WHERE id = $1",
         [userId]
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       res.json(result.rows[0]);
     } catch (error) {
-      console.error('Profile fetch error:', error);
-      res.status(500).json({ message: 'Server error while fetching profile' });
+      console.error("Profile fetch error:", error);
+      res.status(500).json({ message: "Server error while fetching profile" });
     }
   }
-} 
+}

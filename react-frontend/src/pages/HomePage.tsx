@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import TaskCard from '../components/task-card';
-import AddTaskCard from '../components/add-task-card';
-import { User } from '../types/user';
-import { Task } from '../types/task';
-import { AddTaskCardProps } from '../components/add-task-card';
-import '../styles/HomePage.css';
+import { useState, useEffect } from "react";
+import TaskCard from "../components/task-card";
+import AddTaskCard from "../components/add-task-card";
+import { User } from "../types/user";
+import { Task } from "../types/task";
+import { AddTaskCardProps } from "../components/add-task-card";
+import "../styles/index.css";
+import { useNavigate } from "react-router-dom";
 
 // 定義任務數據類型
 interface FetchHomePageDataProps {
@@ -13,75 +14,94 @@ interface FetchHomePageDataProps {
 }
 
 // 定義篩選狀態類型
-type FilterStatus = 'all' | 'in-progress' | 'to-review' | 'done' | 'to-do';
+type FilterStatus = "all" | "in-progress" | "to-review" | "done" | "to-do";
 
 // 定義排序類型
-type SortBy = 'created-desc' | 'created-asc' | 'updated-desc' | 'updated-asc' | 'status' ;
+type SortBy =
+  | "created-desc"
+  | "created-asc"
+  | "updated-desc"
+  | "updated-asc"
+  | "status";
 
 function HomePage() {
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isGridView, setIsGridView] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  
-  // 篩選狀態
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [filterUser, setFilterUser] = useState<number>(0); // 0 表示所有用戶
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // 排序狀態
-  const [sortBy, setSortBy] = useState<SortBy>('created-desc');
+  const [error, setError] = useState<string>("");
 
-    const fetchHomePageData = async () => {
-            setLoading(true);
+  // 篩選狀態
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterUser, setFilterUser] = useState<number>(0); // 0 表示所有用戶
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // 排序狀態
+  const [sortBy, setSortBy] = useState<SortBy>("created-desc");
+
+  const navigate = useNavigate();
+
+  const fetchHomePageData = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const response = await fetch('http://localhost:3001/api/users');
+      const response = await fetch("http://localhost:3001/api/users");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setUsers(result.data);
       } else {
-        console.error('Invalid users data format:', result);
-        setUsers([]);
+        throw new Error("Invalid users data format");
       }
     } catch (error) {
-      console.error('Failed to fetch users:', error);
+      console.error("Failed to fetch users:", error);
+      setError("Failed to load users data. Please try again later.");
       setUsers([]);
     }
     try {
-      const response = await fetch('http://localhost:3001/api/tasks');
-            const result = await response.json();
+      const response = await fetch("http://localhost:3001/api/tasks");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setTasks(result.data);
       } else {
-        console.error('Invalid tasks data format:', result);
-        setTasks([]);
+        throw new Error("Invalid tasks data format");
       }
-        } catch (error) {
-      console.error('Failed to fetch tasks:', error);
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error);
+      setError((prev) =>
+        prev
+          ? `${prev}\nFailed to load tasks data.`
+          : "Failed to load tasks data. Please try again later."
+      );
       setTasks([]);
     }
-            setLoading(false);
-    }
+    setLoading(false);
+  };
 
-    useEffect(() => {
-        fetchHomePageData();  
-    }, []);
+  useEffect(() => {
+    fetchHomePageData();
+  }, []);
 
   // 篩選邏輯
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = tasks.filter((task) => {
     // 按狀態篩選
     let statusMatch = true;
     switch (filterStatus) {
-      case 'in-progress':
+      case "in-progress":
         statusMatch = task.Work_in_progress;
         break;
-      case 'to-review':
+      case "to-review":
         statusMatch = task.To_review;
         break;
-      case 'done':
+      case "done":
         statusMatch = task.Done;
         break;
-      case 'to-do':
+      case "to-do":
         statusMatch = !task.Work_in_progress && !task.To_review && !task.Done;
         break;
       default:
@@ -92,7 +112,8 @@ function HomePage() {
     const userMatch = filterUser === 0 || task.User_Id === filterUser;
 
     // 按搜索詞篩選
-    const searchMatch = searchTerm === '' || 
+    const searchMatch =
+      searchTerm === "" ||
       task.Content.toLowerCase().includes(searchTerm.toLowerCase());
 
     return statusMatch && userMatch && searchMatch;
@@ -101,15 +122,23 @@ function HomePage() {
   // 排序邏輯
   const sortedAndFilteredTasks = [...filteredTasks].sort((a, b) => {
     switch (sortBy) {
-      case 'created-desc':
-        return new Date(b.Created_At).getTime() - new Date(a.Created_At).getTime();
-      case 'created-asc':
-        return new Date(a.Created_At).getTime() - new Date(b.Created_At).getTime();
-      case 'updated-desc':
-        return new Date(b.Updated_At).getTime() - new Date(a.Updated_At).getTime();
-      case 'updated-asc':
-        return new Date(a.Updated_At).getTime() - new Date(b.Updated_At).getTime();
-      case 'status':
+      case "created-desc":
+        return (
+          new Date(b.Created_At).getTime() - new Date(a.Created_At).getTime()
+        );
+      case "created-asc":
+        return (
+          new Date(a.Created_At).getTime() - new Date(b.Created_At).getTime()
+        );
+      case "updated-desc":
+        return (
+          new Date(b.Updated_At).getTime() - new Date(a.Updated_At).getTime()
+        );
+      case "updated-asc":
+        return (
+          new Date(a.Updated_At).getTime() - new Date(b.Updated_At).getTime()
+        );
+      case "status":
         // 排序優先級：Done > To Review > In Progress > Not Started
         const getStatusPriority = (task: Task) => {
           if (task.Done) return 4;
@@ -125,30 +154,28 @@ function HomePage() {
 
   // 獲取用戶名稱
   const getUserName = (userId: number): string => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.Name : 'Unknown User';
+    const user = users.find((u) => u.id === userId);
+    return user ? user.Name : "Unknown User";
   };
 
   // 清除所有篩選和排序
   const clearFilters = () => {
-    setFilterStatus('all');
+    setFilterStatus("all");
     setFilterUser(0);
-    setSearchTerm('');
-    setSortBy('created-desc');
+    setSearchTerm("");
+    setSortBy("created-desc");
   };
 
   const toggleView = () => {
     setIsGridView(!isGridView);
   };
 
-
-
   const onAddTask = async (taskContent: string, user_Id: number) => {
     try {
-      const response = await fetch('http://localhost:3001/api/tasks', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/tasks", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           Content: taskContent,
@@ -166,175 +193,156 @@ function HomePage() {
         setTasks([...tasks, result.data]);
         fetchHomePageData();
       } else {
-        throw new Error(result.message || 'Failed to create task');
+        throw new Error(result.message || "Failed to create task");
       }
     } catch (error) {
-      console.error('Failed to add task:', error);
+      console.error("Failed to add task:", error);
     }
   };
 
+  return (
+    <div className="min-h-screen bg-gray-50 p-0 m-0">
+      {/* Header */}
 
-
-    return (
-    <div className="home-container">
-      <header className="home-header">
-        <div className="header-content">
-          <h1 className="home-title">Task Management System</h1>
-          <div className="view-toggle">
-            <button 
-              className={`view-toggle-btn ${isGridView ? 'active' : ''}`}
-              onClick={toggleView}
-              title="grid view"
-            >
-              📱
-            </button>
-            <button 
-              className={`view-toggle-btn ${!isGridView ? 'active' : ''}`}
-              onClick={toggleView}
-              title="list view"
-            >
-              📝
-            </button>
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-2 text-center text-gray-600">Loading...</p>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* 篩選和排序區域 */}
-      <section className="filter-section">
-        <div className="filter-container">
-          <div className="filter-group">
-            <label htmlFor="search">Search Task:</label>
-            <input
-              id="search"
-              type="text"
-              placeholder="Search Task Content"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="filter-input"
-            />
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="status-filter">Status Filter:</label>
-            <select
-              id="status-filter"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-              className="filter-select"
-            >
-              <option value="all">All</option>
-              <option value="to-do">To-Do</option>
-              <option value="in-progress">In Progress</option>
-              <option value="to-review">To Review</option>
-              <option value="done">Done</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="user-filter">User Filter:</label>
-            <select
-              id="user-filter"
-              value={filterUser}
-              onChange={(e) => setFilterUser(Number(e.target.value))}
-              className="filter-select"
-            >
-              <option value={0}>All Users</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>{user.Name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="sort-select">Sort By:</label>
-            <select
-              id="sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortBy)}
-              className="filter-select"
-            >
-              <option value="created-desc">Created Date (Newest)</option>
-              <option value="created-asc">Created Date (Oldest)</option>
-              <option value="updated-desc">Updated Date (Newest)</option>
-              <option value="updated-asc">Updated Date (Oldest)</option>
-              <option value="status">Status Priority</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <button 
-              onClick={clearFilters}
-              className="clear-filters-btn"
-              title="Clear All Filters"
-            >
-              Clear Filters
-            </button>
-          </div>
+      {error && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 mx-8"
+          role="alert"
+        >
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline whitespace-pre-line">{error}</span>
         </div>
-
-        {/* 篩選和排序結果統計 */}
-        <div className="filter-stats">
-          <span>
-            Showing {sortedAndFilteredTasks.length} / {tasks.length} tasks
-            {(filterStatus !== 'all' || filterUser !== 0 || searchTerm !== '' || sortBy !== 'created-desc') && (
-              <span className="filter-active"> (Filtered/Sorted)</span>
-            )}
-          </span>
-          <span className="sort-info">
-            {' • '}Sorted by: {
-              sortBy === 'created-desc' ? 'Created Date (Newest)' :
-              sortBy === 'created-asc' ? 'Created Date (Oldest)' :
-              sortBy === 'updated-desc' ? 'Updated Date (Newest)' :
-              sortBy === 'updated-asc' ? 'Updated Date (Oldest)' :
-              sortBy === 'status' ? 'Status Priority' : 'Default'
-            }
-          </span>
-        </div>
-      </section>
-
-      <section className="task-section">
-        {loading && (
-          <div className="loading-message">
-            <p>Loading tasks...</p>
-          </div>
-        )}
-        
-        {sortedAndFilteredTasks && sortedAndFilteredTasks.length > 0 && (
-          <div className={isGridView ? "tasks-grid" : "tasks-list"}>
-            {sortedAndFilteredTasks.map((task: Task) => (
-              <div key={task.id} className="task-wrapper">
-                <TaskCard 
-                  task={task} 
-                  users={users} 
-                  onClick={() => window.location.href = `/task/${task.id}`}
-                />
-              </div>
-          ))}
-          </div>
-        )}
-
-        {sortedAndFilteredTasks && sortedAndFilteredTasks.length === 0 && !loading && (
-          <div className="no-tasks-message">
-            {tasks.length === 0 ? (
-              <>
-                <p>No tasks</p>
-                <p>Please ensure the backend API server is running</p>
-              </>
-            ) : (
-              <>
-                <p>No tasks matching the filters</p>
-                <button onClick={clearFilters} className="clear-filters-btn">
-                  Clear Filters
-                </button>
-              </>
-            )}
-            </div>
-          )}
-        </section>
-
-      <AddTaskCard onTaskAdded={onAddTask} users={users} />
+      )}
+      <div className="flex justify-between items-center mb-6 mt-6">
+        <h1 className="text-2xl font-bold text-gray-800">Task Management</h1>
+        <button
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          onClick={() => setIsGridView(!isGridView)}
+        >
+          {isGridView ? "List View" : "Grid View"}
+        </button>
       </div>
-    );
-  }
+
+      <div className="max-w-6xl mx-auto px-8">
+        {/* Filter Card */}
+        <div className="card mb-8">
+          <div className="card-header">
+            <h2 className="card-title text-xl">Filter & Sort</h2>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                className="card-select w-full"
+                value={filterStatus}
+                onChange={(e) =>
+                  setFilterStatus(e.target.value as FilterStatus)
+                }
+              >
+                <option value="all">All Status</option>
+                <option value="to-do">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="to-review">To Review</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+
+            {/* User Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To
+              </label>
+              <select
+                className="card-select w-full"
+                value={filterUser}
+                onChange={(e) => setFilterUser(Number(e.target.value))}
+              >
+                <option value={0}>All Users</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort By */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sort By
+              </label>
+              <select
+                className="card-select w-full"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortBy)}
+              >
+                <option value="created-desc">Newest First</option>
+                <option value="created-asc">Oldest First</option>
+                <option value="updated-desc">Recently Updated</option>
+                <option value="updated-asc">Least Recently Updated</option>
+                <option value="status">By Status</option>
+              </select>
+            </div>
+
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                className="card-input w-full"
+                placeholder="Search tasks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tasks Grid/List */}
+        <div className={isGridView ? "tasks-grid" : "tasks-list"}>
+          {loading ? (
+            <div className="text-center py-8">Loading tasks...</div>
+          ) : sortedAndFilteredTasks.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No tasks found</div>
+          ) : (
+            sortedAndFilteredTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                users={users}
+                onClick={() => navigate(`/task/${task.id}`)}
+                onStatusClick={(status) => setFilterStatus(status)}
+                onUserClick={(userId) => setFilterUser(userId)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Add Task Card */}
+      <AddTaskCard onTaskAdded={onAddTask} users={users} />
+    </div>
+  );
+}
 
 export default HomePage;

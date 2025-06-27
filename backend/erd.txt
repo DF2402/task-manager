@@ -1,0 +1,72 @@
+# Visualize on https://erd.surge.sh
+# or https://quick-erd.surge.sh
+#
+# Relationship Types
+#  -    - one to one
+#  -<   - one to many
+#  >-   - many to one
+#  >-<  - many to many
+#  -0   - one to zero or one
+#  0-   - zero or one to one
+#  0-0  - zero or one to zero or one
+#  -0<  - one to zero or many
+#  >0-  - zero or many to one
+#
+////////////////////////////////////
+
+
+migrations
+----------
+id integer NULL PK
+name varchar(255)
+executed_at datetime NULL
+
+
+User
+----
+id integer NULL PK
+Name varchar(255)
+Email varchar(255) NULL
+Password varchar(255)
+Created_At datetime NULL
+On_boarded_at datetime NULL
+Active boolean NULL
+
+
+Schedule
+--------
+id integer NULL PK
+User_Id integer NULL FK >0- User.id
+Date datetime NULL
+Created_At datetime NULL
+
+
+File
+----
+id integer NULL PK
+File_Name varchar(255)
+File_Path varchar(255)
+File_Type varchar(255)
+File_Size integer
+Created_At datetime NULL
+Updated_At datetime NULL
+
+
+Upload
+------
+id integer NULL PK
+File_Id integer NULL FK >0- File.id
+Task_Id integer NULL FK >0- Task.id
+Created_At datetime NULL
+
+
+Task
+----
+id integer NULL PK
+Content varchar(255) NULL
+User_Id integer NULL FK >0- User.id
+Work_in_progress boolean NULL
+To_review boolean NULL
+Done boolean NULL
+Created_At datetime NULL
+Updated_At datetime NULL
